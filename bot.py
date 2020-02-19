@@ -53,8 +53,8 @@ class Bot:
                     if 'number' in call.data:
                         number = self._getNum(call.data)
                         markup = types.InlineKeyboardMarkup(row_width=1)
-                        # markup.add(types.InlineKeyboardButton('back', callback_data="menu"))
-                        self.bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=self.tasks.tasksByNumber[number].task, reply_markup=markup)
+                        markup.add(types.InlineKeyboardButton('back', callback_data="menu"))
+                        self.bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=f'company {self.tasks.tasksByNumber[number].company}, difficulty {self.tasks.tasksByNumber[number].difficulty}\n {self.tasks.tasksByNumber[number].task}', reply_markup=markup)
                         self.bot.answer_callback_query(callback_query_id=call.id, show_alert=False, text="")
                     
                     if call.data == 'menu':
@@ -68,7 +68,7 @@ class Bot:
                                 types.InlineKeyboardButton(
                                     str(company), callback_data="company name " + str(company) + " "+ str(0)
                                 ))
-                        
+                        markup.add(types.InlineKeyboardButton('back', callback_data="menu"))                
                         self.bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text='companies', reply_markup=markup)
                         self.bot.answer_callback_query(callback_query_id=call.id, show_alert=False, text="")
                     if "company name" in call.data:
@@ -89,9 +89,32 @@ class Bot:
                         #             callback_data="number " + str(task.number
                         #             )))
                         self._addNextPrev(markup, tasks, number, 'company name ' + name + " ")
-                        markup.add(types.InlineKeyboardButton('back', callback_data="menu"))
+                        # markup.add(types.InlineKeyboardButton('back', callback_data="menu"))
                         self.bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=name, reply_markup=markup)
                         self.bot.answer_callback_query(callback_query_id=call.id, show_alert=False, text="")
+                    if call.data == 'tasks choose by difficulty':
+                        markup = types.InlineKeyboardMarkup(row_width=1)
+                        # number = self._getNum(call.data)
+                        for difficulty in list(self.tasks.tasksByDifficulty.keys()):
+                            markup.add(
+                                types.InlineKeyboardButton(
+                                    str(difficulty), callback_data="difficulty " + str(difficulty) + " "+ str(0)
+                                ))
+                        markup.add(types.InlineKeyboardButton('back', callback_data="menu"))
+                        self.bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text='choose difficulty', reply_markup=markup)
+                        self.bot.answer_callback_query(callback_query_id=call.id, show_alert=False, text="")
+                    elif "difficulty " in call.data:
+                        number = self._getNum(call.data)
+                        difficulty = call.data[len("difficulty "):call.data.find(str(number))-1]
+                        print(self.tasks.tasksByDifficulty)
+                        tasks = self.tasks.tasksByDifficulty[difficulty]
+                        markup = types.InlineKeyboardMarkup(row_width=1)
+                        print(difficulty)
+                        print(tasks)
+                        self._addNextPrev(markup, tasks, number, 'difficulty ' + difficulty + ' ')
+                        self.bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text='cose difficulty', reply_markup=markup)
+                        self.bot.answer_callback_query(callback_query_id=call.id, show_alert=False, text="")
+
             except Exception as e:
                 print(repr(e))
 
@@ -108,8 +131,11 @@ class Bot:
                 "Task by number", callback_data="tasks choose from all 0"
             ), 
             types.InlineKeyboardButton(
-                "Tasks by company", callback_data="tasks choose by company"
-        ))
+                "Tasks by company", callback_data="tasks choose by company"),
+            types.InlineKeyboardButton(
+                "Tasks by difficulty", callback_data="tasks choose by difficulty"
+            ))
+
         return markup
 
     def _addNextPrev(self, markup, tasks, number, call_back):

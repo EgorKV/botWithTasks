@@ -18,13 +18,13 @@ class Task:
             else:
                 self.company = taskList[4][taskList[4].find('asked by') + len('asked by') + 1: taskList[4].find('.')]
         self.task = ''
-        i = 4
+        i = 5
         while 'premium' not in taskList[i] and "liked this problem, feel free to forward" not in taskList[i] and 'Ready to interview?' not in taskList[i] and i < len(taskList)-1:
             taskList[i] = re.sub('=\n', '\n', taskList[i])
             self.task += taskList[i]
             i += 1
         # print(self.task)
-
+        self.difficulty = taskList[1][taskList[1].find('[')+1:taskList[1].find(']')]
         
 class TasksManagement:
     def __init__(self):
@@ -41,6 +41,9 @@ class TasksManagement:
                 self.tasksByCompany[task.company] = [task]
         self.companyNames = list(self.tasksByCompany.keys())
         self.companyNames.sort()
+        self.tasksByDifficulty = {'Easy':[], 'Medium':[], 'Hard': []}
+        for task in self.tasks:
+            self.tasksByDifficulty[task.difficulty].append(task)
 
     def update(self):
         mail = imaplib.IMAP4_SSL("imap.gmail.com", 993)
@@ -67,6 +70,7 @@ class TasksManagement:
                     print(check)
                     if check:
                         taskList.append(task)
+                    
         mail.close()
         return taskList
 
@@ -111,5 +115,5 @@ def get_text(msg, fallback_encoding='utf-8', errors='replace'):
 
 
 task = TasksManagement()
-print(task.tasksByCompany)
-print(task.tasksByCompany[''][0].task)
+# print(task.tasksByCompany)
+# print(task.tasksByCompany[''][0].task)
